@@ -1,6 +1,7 @@
 # The program publishes comics in [https://vk.com](https://vk.com)
 
-The program downloads comics from the resource [https://xkcd.com](https://xkcd.com). Uses the VKontakte API to publish these comics
+The program downloads comics from the resource [https://xkcd.com](https://xkcd.com). Uses the VKontakte API to publish 
+these comics in [https://vk.com](https://vk.com)
 
 ### Software environment and installation:
 
