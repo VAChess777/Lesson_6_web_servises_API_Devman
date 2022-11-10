@@ -76,7 +76,6 @@ $ python main.py
 The program consists of 1 script:
 
 ```main.py``` - The program downloads comics from the resource [https://xkcd.com](https://xkcd.com). Uses the VKontakte API to publish these comics.
-
             
 ### Features works of the program:
 
