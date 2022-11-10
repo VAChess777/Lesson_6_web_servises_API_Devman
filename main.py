@@ -102,23 +102,23 @@ def main():
     path = 'Python Comics'
     random_number_comic = get_random_number_comic()
     random_comic = get_random_comic(random_number_comic)
+    filename = download_random_comic(
+        random_comic,
+        path,
+        random_number_comic
+    )
+    response_from_server_vk = uploading_random_comic_to_server_vk(
+        path,
+        filename,
+        upload_url_vk
+    )
+    image_id_from_response_server = saving_uploading_random_comic_in_album_vk(
+        access_token_vk,
+        response_from_server_vk,
+        owner_id,
+        group_id
+    )
     try:
-        filename = download_random_comic(
-            random_comic,
-            path,
-            random_number_comic
-        )
-        response_from_server_vk = uploading_random_comic_to_server_vk(
-            path,
-            filename,
-            upload_url_vk
-        )
-        image_id_from_response_server = saving_uploading_random_comic_in_album_vk(
-            access_token_vk,
-            response_from_server_vk,
-            owner_id,
-            group_id
-        )
         publish_random_comic_on_wall_vk(
             image_id_from_response_server,
             owner_id,
