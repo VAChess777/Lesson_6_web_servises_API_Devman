@@ -1,4 +1,4 @@
-# The program publishes comics in contact
+# The program publishes comics in [https://vk.com](https://vk.com)
 
 The program downloads comics from the resource [https://xkcd.com](https://xkcd.com). Uses the VKontakte API to publish these comics
 
