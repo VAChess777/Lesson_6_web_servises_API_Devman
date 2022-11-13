@@ -6,125 +6,143 @@ from dotenv import load_dotenv
 from pathlib import Path
 
 
-def get_random_comic(random_number_comic):
-    url = f'https://xkcd.com/{random_number_comic}/info.0.json'
-    response = requests.get(url)
-    response.raise_for_status()
-    random_comic = response.json()
-    return random_comic
-
-
-def get_random_number_comic():
-    url = 'https://xkcd.com/info.0.json'
-    response = requests.get(url)
-    response.raise_for_status()
-    number_last_comic = int(response.json()["num"])
-    random_number_comic = random.randint(1, number_last_comic)
-    return random_number_comic
-
-
-def download_random_comic(random_comic, path, random_number_comic):
-    random_comic_url = random_comic['img']
-    filename = f'python_comics_number_{random_number_comic}.png'
-    response = requests.get(random_comic_url)
-    response.raise_for_status()
-    image = response.content
+def download_random_comic(path):
+    last_comic_url = 'https://xkcd.com/info.0.json'
+    response_last_comic_url = requests.get(last_comic_url)
+    response_last_comic_url.raise_for_status()
+    last_comic_number = int(response_last_comic_url.json()["num"])
+    random_comic_number = random.randint(1, last_comic_number)
+    random_comic_url = f'https://xkcd.com/{random_comic_number}/info.0.json'
+    response_random_comic_url = requests.get(random_comic_url)
+    response_random_comic_url.raise_for_status()
+    random_comic = response_random_comic_url.json()
+    comic_commentary = random_comic['alt']
+    comic_url = random_comic['img']
+    response_comic_url = requests.get(
+        comic_url
+    )
+    response_comic_url.raise_for_status()
+    filename = f'python_comics_number_{random_comic_number}.png'
+    image = response_comic_url.content
     with open(Path(f'{path}', f'{filename}'), 'wb') as file:
         file.write(image)
-    return filename
+    return filename, comic_commentary
 
 
-def uploading_random_comic_to_server_vk(path, filename, upload_url_vk):
+def check_errors_vk_api(response):
+    response = response.json()
+    if response.get('error'):
+        raise requests.HTTPError(
+            response.get('error').get('error_code'),
+            response.get('error').get('error_msg')
+        )
+    return response
+
+
+def get_vk_upload_url(vk_access_token, vk_group_id):
+    url = 'https://api.vk.com/method/photos.getWallUploadServer'
+    params = {
+        'access_token': vk_access_token,
+        'group_id': vk_group_id,
+        'v': '5.131'
+    }
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+    vk_upload_url = check_errors_vk_api(response)['response']['upload_url']
+    vk_user_id = check_errors_vk_api(response)['response']['user_id']
+    return vk_upload_url, vk_user_id
+
+
+def upload_random_comic(path, vk_upload_url, filename):
     with open(Path(f'{path}', f'{filename}'), 'rb') as file:
         files = {
             'photo': file,
         }
-        response = requests.post(upload_url_vk, files=files)
-        response.raise_for_status()
-        response_from_server_vk = response.json()
-        return response_from_server_vk
+        response = requests.post(vk_upload_url, files=files)
+    response.raise_for_status()
+    photo_vk = check_errors_vk_api(response)['photo']
+    server_number = check_errors_vk_api(response)['server']
+    hash_vk = check_errors_vk_api(response)['hash']
+    return photo_vk, server_number, hash_vk
 
 
-def saving_uploading_random_comic_in_album_vk(
-            access_token_vk,
-            response_from_server_vk,
-            owner_id,
-            group_id):
+def save_random_comic(
+            vk_access_token,
+            filename,
+            vk_upload_url,
+            path,
+            vk_user_id,
+            vk_group_id):
     url = 'https://api.vk.com/method/photos.saveWallPhoto'
-    photo_from_server_vk = response_from_server_vk['photo']
-    server_number = response_from_server_vk['server']
-    hash_from_server_vk = response_from_server_vk['hash']
+    photo_vk, server_number, hash_vk = upload_random_comic(
+        path,
+        vk_upload_url,
+        filename
+    )
     params = {
-        'access_token': access_token_vk,
-        'owner_id': owner_id,
-        'group_id': group_id,
-        'photo': photo_from_server_vk,
+        'access_token': vk_access_token,
+        'owner_id': vk_user_id,
+        'group_id': vk_group_id,
+        'photo': photo_vk,
         'server': server_number,
-        'hash': hash_from_server_vk,
+        'hash': hash_vk,
         'v': '5.131'
     }
     response = requests.post(url, params=params)
     response.raise_for_status()
-    image_id_from_response_server = response.json()['response'][0]['id']
-    return image_id_from_response_server
+    image_id = check_errors_vk_api(response)['response'][0]['id']
+    return image_id
 
 
-def publish_random_comic_on_wall_vk(
-            image_id_from_response_server,
-            owner_id,
-            random_comic,
-            access_token_vk,
-            group_id):
+def publish_random_comic(
+            image_id,
+            comic_commentary,
+            vk_user_id,
+            vk_access_token,
+            vk_group_id):
     url = 'https://api.vk.com/method/wall.post'
-    attachments = f'photo{owner_id}_{image_id_from_response_server}'
-    commentary_comic_picture = random_comic['alt']
+    attachments = f'photo{vk_user_id}_{image_id}'
     params = {
-        'access_token': access_token_vk,
-        'owner_id': owner_id,
+        'access_token': vk_access_token,
+        'owner_id': vk_user_id,
         'friends_only': '1',
         'attachments': attachments,
         'from_group': '1',
-        'message': commentary_comic_picture,
-        'group_id': group_id,
+        'message': comic_commentary,
+        'group_id': vk_group_id,
         'v': '5.131'
     }
     response = requests.post(url, params=params)
     response.raise_for_status()
+    check_errors_vk_api(response)
 
 
 def main():
     load_dotenv()
-    access_token_vk = os.environ['VK_ACCESS_TOKEN']
-    upload_url_vk = os.environ['UPLOAD_URL_VK']
-    owner_id = os.environ['OWNER_ID']
-    group_id = os.environ['GROUP_ID']
+    vk_access_token = os.environ['VK_ACCESS_TOKEN']
+    vk_group_id = os.environ['VK_GROUP_ID']
     Path('Python Comics').mkdir(parents=True, exist_ok=True)
     path = 'Python Comics'
-    random_number_comic = get_random_number_comic()
-    random_comic = get_random_comic(random_number_comic)
-    filename = download_random_comic(
-        random_comic,
-        path,
-        random_number_comic
+    filename, comic_commentary = download_random_comic(path)
+    vk_upload_url, vk_user_id = get_vk_upload_url(
+        vk_access_token,
+        vk_group_id
     )
-    response_from_server_vk = uploading_random_comic_to_server_vk(
-        path,
+    image_id = save_random_comic(
+        vk_access_token,
         filename,
-        upload_url_vk
-    )
-    image_id_from_response_server = saving_uploading_random_comic_in_album_vk(
-        access_token_vk,
-        response_from_server_vk,
-        owner_id,
-        group_id
+        vk_upload_url,
+        path,
+        vk_user_id,
+        vk_group_id
     )
     try:
-        publish_random_comic_on_wall_vk(
-            image_id_from_response_server,
-            owner_id,
-            random_comic,
-            access_token_vk,
-            group_id
+        publish_random_comic(
+            image_id,
+            comic_commentary,
+            vk_user_id,
+            vk_access_token,
+            vk_group_id
         )
     finally:
         os.remove(Path(f'{path}', f'{filename}'))

@@ -35,33 +35,19 @@ you need to use the `Implicit Flow` procedure, a detailed description of this pr
 The token looks like a string like `access_token=vk1.a.sscscs6546EESCSFS5454U0e...`, it will appear in the address bar, signed as `access_token`.
 
 When you receive the `access_token`, put its value in the `.env` file.
-For example: `'VK_ACCESS_TOKEN'=vk1.a.sscscs6546EESCSFS5454U0e.........`.
+For example: `VK_ACCESS_TOKEN=vk1.a.sscscs6546EESCSFS5454U0e.........`.
 
-Then put this value in an environment variable in the program.
+Then put the environment variable into the program.
 For example: `access_token_vk = os.environ['VK_ACCESS_TOKEN']`.
 
-Open your  VKontakte community and see your `group_id` in the address bar [https://vk.com/club654651345](https://vk.com/club654651345)
+Open your VKontakte community in a browser, and see your `vk_group_id` in the address bar.        
+For example: [https://vk.com/club225463221](https://vk.com/club225463221), end your `vk_group id=225463221`.
 
-When you receive the `group_id`, put its value in the `.env` file.
-For example: `'GROUP_ID'='654651345`.
+When you receive the `vk_group_id`, put its value in the `.env` file.
+For example: `VK_GROUP_ID=225463221`.
 
-Then put this value in an environment variable in the program.
-For example: `group_id = os.environ['GROUP_ID']`.
-
-Use the `photos.getWallUploadServer` method and get the server address for uploading the image [https://dev.vk.com/method/photos.getWallUploadServer](https://dev.vk.com/method/photos.getWallUploadServer)
-After successful execution, it returns an object with the fields `upload_url`, `album_id`, `user_id`.
-
-When you receive the `upload_url` put its value in the `.env` file.
-For example: `'UPLOAD_URL_VK'='https://pu.vk.com/d54002/ss8895/upload.php?act=do_add&mid=9.......'`.
-
-Then put this value in an environment variable in the program.
-For example: `upload_url_vk = os.environ['UPLOAD_URL_VK']`.
-
-When you receive the `user_id` put its value in the `.env` file.
-For example: `'OWNER_ID'='789456...'`.
-
-Then put this value in an environment variable in the program.
-For example: `owner_id = os.environ['OWNER_ID']`.
+Then put the environment variable into the program.
+For example: `vk_group_id = os.environ['VK_GROUP_ID']`.
 
 To use all of the above environment variables in programs, use the `load_dotenv()` module.
 
@@ -82,12 +68,12 @@ The program consists of 1 script:
 
 The `main.py` program contains the functions:
 
-* The `get_random_comic` function - downloads a random comic from a resource [https://xkcd.com](https://xkcd.com).
-* The `get_random_number_comic` function - gets the total number of comics and selects a random comic number.
-* The `download_random_comic` function - downloads a random comic.
-* The `uploading_random_comic_to_server_vk` function - uploads the comic to the VK server.
-* The `saving_uploading_random_comic_in_album_vk` function - saves the downloaded comic.
-* The `publish_random_comic_on_wall_vk` function - publishes a comic on the VK wall.
+* The `download_random_comic` function - downloads random comic from the resource [https://xkcd.com](https://xkcd.com).
+* The `check_errors_vk_api` function - checks all responses from the VK api, and if the response contains an error, displays information about the error number and error text.
+* The `get_vk_upload_url` function - gets the address to download the comic and 
+* The `upload_random_comic` function - uploads the comic to the VK server.
+* The `save_random_comic` function - saves the downloaded comic.
+* The `publish_random_comic` function - publishes a comic on the VK wall.
 * The `def main():` - main function. 
 
 ### Project Goals
