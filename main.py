@@ -36,7 +36,6 @@ def check_vk_api_errors(response):
             response.get('error').get('error_code'),
             response.get('error').get('error_msg')
         )
-    return response
 
 
 def get_vk_upload_url(vk_access_token, vk_group_id):
@@ -49,9 +48,9 @@ def get_vk_upload_url(vk_access_token, vk_group_id):
     response = requests.get(url, params=params)
     response.raise_for_status()
     check_vk_api_errors(response)
-    response_information = response.json()
-    vk_upload_url = response_information['response']['upload_url']
-    vk_user_id = response_information['response']['user_id']
+    total_response = response.json()
+    vk_upload_url = total_response['response']['upload_url']
+    vk_user_id = total_response['response']['user_id']
     return vk_upload_url, vk_user_id
 
 
@@ -63,11 +62,11 @@ def upload_random_comic(path, vk_upload_url, filename):
         response = requests.post(vk_upload_url, files=files)
     response.raise_for_status()
     check_vk_api_errors(response)
-    response_information = response.json()
-    photo_vk = response_information['photo']
-    server_number = response_information['server']
-    hash_vk = response_information['hash']
-    return photo_vk, server_number, hash_vk
+    total_response = response.json()
+    vk_photo = total_response['photo']
+    server_number = total_response['server']
+    vk_hash = total_response['hash']
+    return vk_photo, server_number, vk_hash
 
 
 def save_random_comic(
@@ -78,7 +77,7 @@ def save_random_comic(
             vk_user_id,
             vk_group_id):
     url = 'https://api.vk.com/method/photos.saveWallPhoto'
-    photo_vk, server_number, hash_vk = upload_random_comic(
+    vk_photo, server_number, vk_hash = upload_random_comic(
         path,
         vk_upload_url,
         filename
@@ -87,16 +86,16 @@ def save_random_comic(
         'access_token': vk_access_token,
         'owner_id': vk_user_id,
         'group_id': vk_group_id,
-        'photo': photo_vk,
+        'photo': vk_photo,
         'server': server_number,
-        'hash': hash_vk,
+        'hash': vk_hash,
         'v': '5.131'
     }
     response = requests.post(url, params=params)
     response.raise_for_status()
     check_vk_api_errors(response)
-    response_information = response.json()
-    image_id = response_information['response'][0]['id']
+    total_response = response.json()
+    image_id = total_response['response'][0]['id']
     return image_id
 
 
