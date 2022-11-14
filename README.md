@@ -69,7 +69,7 @@ The program consists of 1 script:
 The `main.py` program contains the functions:
 
 * The `download_random_comic` function - downloads random comic from the resource [https://xkcd.com](https://xkcd.com).
-* The `check_errors_vk_api` function - checks all responses from the VK api, and if the response contains an error, displays information about the error number and error text.
+* The `check_vk_api_errors` function - checks all responses from the VK api, and if the response contains an error, displays information about the error number and error text.
 * The `get_vk_upload_url` function - gets the address to download the comic and 
 * The `upload_random_comic` function - uploads the comic to the VK server.
 * The `save_random_comic` function - saves the downloaded comic.

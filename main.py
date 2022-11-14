@@ -8,34 +8,37 @@ from pathlib import Path
 
 def download_random_comic(path):
     last_comic_url = 'https://xkcd.com/info.0.json'
-    response_last_comic_url = requests.get(last_comic_url)
-    response_last_comic_url.raise_for_status()
-    last_comic_number = int(response_last_comic_url.json()["num"])
+    last_comic_response = requests.get(last_comic_url)
+    last_comic_response.raise_for_status()
+    last_comic_number = int(last_comic_response.json()["num"])
     random_comic_number = random.randint(1, last_comic_number)
     random_comic_url = f'https://xkcd.com/{random_comic_number}/info.0.json'
-    response_random_comic_url = requests.get(random_comic_url)
-    response_random_comic_url.raise_for_status()
-    random_comic = response_random_comic_url.json()
+    random_comic_response = requests.get(random_comic_url)
+    random_comic_response.raise_for_status()
+    random_comic = random_comic_response.json()
     comic_commentary = random_comic['alt']
     comic_url = random_comic['img']
-    response_comic_url = requests.get(
+    comic_response = requests.get(
         comic_url
     )
-    response_comic_url.raise_for_status()
+    comic_response.raise_for_status()
     filename = f'python_comics_number_{random_comic_number}.png'
-    image = response_comic_url.content
+    image = comic_response.content
     with open(Path(f'{path}', f'{filename}'), 'wb') as file:
         file.write(image)
     return filename, comic_commentary
 
 
-def check_errors_vk_api(response):
-    response = response.json()
-    if response.get('error'):
-        raise requests.HTTPError(
-            response.get('error').get('error_code'),
-            response.get('error').get('error_msg')
-        )
+def check_vk_api_errors(response):
+    try:
+        response = response.json()
+        if response.get('error'):
+            raise requests.HTTPError(
+                response.get('error').get('error_code'),
+                response.get('error').get('error_msg')
+            )
+    except requests.exceptions.HTTPError as error:
+        exit("Can't get data from server:\n{0}".format(error))
     return response
 
 
@@ -48,8 +51,9 @@ def get_vk_upload_url(vk_access_token, vk_group_id):
     }
     response = requests.get(url, params=params)
     response.raise_for_status()
-    vk_upload_url = check_errors_vk_api(response)['response']['upload_url']
-    vk_user_id = check_errors_vk_api(response)['response']['user_id']
+    check_vk_api_errors(response)
+    vk_upload_url = response.json()['response']['upload_url']
+    vk_user_id = response.json()['response']['user_id']
     return vk_upload_url, vk_user_id
 
 
@@ -60,9 +64,10 @@ def upload_random_comic(path, vk_upload_url, filename):
         }
         response = requests.post(vk_upload_url, files=files)
     response.raise_for_status()
-    photo_vk = check_errors_vk_api(response)['photo']
-    server_number = check_errors_vk_api(response)['server']
-    hash_vk = check_errors_vk_api(response)['hash']
+    check_vk_api_errors(response)
+    photo_vk = response.json()['photo']
+    server_number = response.json()['server']
+    hash_vk = response.json()['hash']
     return photo_vk, server_number, hash_vk
 
 
@@ -90,7 +95,8 @@ def save_random_comic(
     }
     response = requests.post(url, params=params)
     response.raise_for_status()
-    image_id = check_errors_vk_api(response)['response'][0]['id']
+    check_vk_api_errors(response)
+    image_id = response.json()['response'][0]['id']
     return image_id
 
 
@@ -114,7 +120,7 @@ def publish_random_comic(
     }
     response = requests.post(url, params=params)
     response.raise_for_status()
-    check_errors_vk_api(response)
+    check_vk_api_errors(response)
 
 
 def main():
