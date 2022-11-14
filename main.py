@@ -50,8 +50,7 @@ def get_vk_upload_url(vk_access_token, vk_group_id):
     check_vk_api_errors(response)
     total_response = response.json()
     vk_upload_url = total_response['response']['upload_url']
-    vk_user_id = total_response['response']['user_id']
-    return vk_upload_url, vk_user_id
+    return vk_upload_url
 
 
 def upload_random_comic(path, vk_upload_url, filename):
@@ -74,7 +73,6 @@ def save_random_comic(
             filename,
             vk_upload_url,
             path,
-            vk_user_id,
             vk_group_id):
     url = 'https://api.vk.com/method/photos.saveWallPhoto'
     vk_photo, server_number, vk_hash = upload_random_comic(
@@ -84,7 +82,6 @@ def save_random_comic(
     )
     params = {
         'access_token': vk_access_token,
-        'owner_id': vk_user_id,
         'group_id': vk_group_id,
         'photo': vk_photo,
         'server': server_number,
@@ -96,23 +93,24 @@ def save_random_comic(
     check_vk_api_errors(response)
     total_response = response.json()
     image_id = total_response['response'][0]['id']
-    return image_id
+    owner_id = total_response['response'][0]['owner_id']
+    return image_id, owner_id
 
 
 def publish_random_comic(
             image_id,
+            owner_id,
             comic_commentary,
-            vk_user_id,
             vk_access_token,
             vk_group_id):
     url = 'https://api.vk.com/method/wall.post'
-    attachments = f'photo{vk_user_id}_{image_id}'
+    attachments = f'photo{owner_id}_{image_id}'
     params = {
         'access_token': vk_access_token,
-        'owner_id': vk_user_id,
-        'friends_only': '1',
+        'owner_id': - int(vk_group_id),
+        'friends_only': 1,
         'attachments': attachments,
-        'from_group': '1',
+        'from_group': 1,
         'message': comic_commentary,
         'group_id': vk_group_id,
         'v': '5.131'
@@ -129,23 +127,22 @@ def main():
     Path('Python Comics').mkdir(parents=True, exist_ok=True)
     path = 'Python Comics'
     filename, comic_commentary = download_random_comic(path)
-    vk_upload_url, vk_user_id = get_vk_upload_url(
+    vk_upload_url = get_vk_upload_url(
         vk_access_token,
         vk_group_id
     )
-    image_id = save_random_comic(
+    image_id, owner_id = save_random_comic(
         vk_access_token,
         filename,
         vk_upload_url,
         path,
-        vk_user_id,
         vk_group_id
     )
     try:
         publish_random_comic(
             image_id,
+            owner_id,
             comic_commentary,
-            vk_user_id,
             vk_access_token,
             vk_group_id
         )
