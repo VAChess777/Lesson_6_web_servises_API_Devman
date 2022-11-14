@@ -30,15 +30,12 @@ def download_random_comic(path):
 
 
 def check_vk_api_errors(response):
-    try:
-        response = response.json()
-        if response.get('error'):
-            raise requests.HTTPError(
-                response.get('error').get('error_code'),
-                response.get('error').get('error_msg')
-            )
-    except requests.exceptions.HTTPError as error:
-        exit("Can't get data from server:\n{0}".format(error))
+    response = response.json()
+    if response.get('error'):
+        raise requests.HTTPError(
+            response.get('error').get('error_code'),
+            response.get('error').get('error_msg')
+        )
     return response
 
 
@@ -52,8 +49,9 @@ def get_vk_upload_url(vk_access_token, vk_group_id):
     response = requests.get(url, params=params)
     response.raise_for_status()
     check_vk_api_errors(response)
-    vk_upload_url = response.json()['response']['upload_url']
-    vk_user_id = response.json()['response']['user_id']
+    response_information = response.json()
+    vk_upload_url = response_information['response']['upload_url']
+    vk_user_id = response_information['response']['user_id']
     return vk_upload_url, vk_user_id
 
 
@@ -65,9 +63,10 @@ def upload_random_comic(path, vk_upload_url, filename):
         response = requests.post(vk_upload_url, files=files)
     response.raise_for_status()
     check_vk_api_errors(response)
-    photo_vk = response.json()['photo']
-    server_number = response.json()['server']
-    hash_vk = response.json()['hash']
+    response_information = response.json()
+    photo_vk = response_information['photo']
+    server_number = response_information['server']
+    hash_vk = response_information['hash']
     return photo_vk, server_number, hash_vk
 
 
@@ -96,7 +95,8 @@ def save_random_comic(
     response = requests.post(url, params=params)
     response.raise_for_status()
     check_vk_api_errors(response)
-    image_id = response.json()['response'][0]['id']
+    response_information = response.json()
+    image_id = response_information['response'][0]['id']
     return image_id
 
 
